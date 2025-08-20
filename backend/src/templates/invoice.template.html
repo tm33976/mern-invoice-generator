@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            margin: 0;
+            padding: 20px;
+        }
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            padding: 40px;
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #30363d;
+        }
+        .header .logo-section .company-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .header .logo-section .company-tagline {
+            font-size: 12px;
+            color: #8b949e;
+        }
+        .header .invoice-title h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+            text-align: right;
+            color: #fff;
+        }
+        .header .invoice-title p {
+            font-size: 12px;
+            margin: 4px 0 0;
+            text-align: right;
+            color: #8b949e;
+        }
+        .customer-details {
+            background-color: #0d1a3a;
+            color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .customer-details .name {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .customer-details .email {
+            background-color: #fff;
+            color: #000;
+            padding: 8px 12px;
+            border-radius: 16px;
+            font-size: 14px;
+        }
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        .products-table thead {
+            background-color: #059669; /* Green from the design */
+            color: #fff;
+        }
+        .products-table th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 500;
+        }
+        .products-table td {
+            padding: 12px 15px;
+        }
+        .products-table tbody tr {
+            background-color: #21262d;
+            border-bottom: 1px solid #30363d;
+        }
+        .products-table tbody tr:last-child {
+            border-bottom: none;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .totals-section {
+            display: flex;
+            justify-content: flex-end;
+        }
+        .totals-box {
+            width: 300px;
+            background-color: #21262d;
+            border-left: 4px solid #8c52ff;
+            padding: 20px;
+        }
+        .totals-box table {
+            width: 100%;
+        }
+        .totals-box td {
+            padding: 8px 0;
+        }
+        .totals-box .grand-total {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+        }
+        .footer p {
+            background-color: #21262d;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #8b949e;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-box">
+        <div class="header">
+            <div class="logo-section">
+                <p class="company-name">Levitation</p>
+                <p class="company-tagline">Infotech</p>
+            </div>
+            <div class="invoice-title">
+                <h1>INVOICE GENERATOR</h1>
+                <p>Sample Output should be this</p>
+            </div>
+        </div>
+
+        <div class="customer-details">
+            <div>
+                <p style="font-size: 12px; color: #8b949e; margin: 0 0 4px;">Name</p>
+                <p class="name">{{personName}}</p>
+            </div>
+            <div>
+                <p style="font-size: 12px; color: #8b949e; margin: 0 0 4px; text-align: right;">Date: {{currentDate}}</p>
+                <p class="email">{{personEmail}}</p>
+            </div>
+        </div>
+
+        <table class="products-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Rate</th>
+                    <th class="text-right">Total Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- PRODUCTS_ROW_PLACEHOLDER -->
+            </tbody>
+        </table>
+
+        <div class="totals-section">
+            <div class="totals-box">
+                <table>
+                    <tr>
+                        <td>Total Charges</td>
+                        <td class="text-right">₹{{total}}</td>
+                    </tr>
+                    <tr>
+                        <td>GST (18%)</td>
+                        <td class="text-right">₹{{gst}}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="padding-top: 10px; border-top: 1px solid #30363d;"></td>
+                    </tr>
+                    <tr class="grand-total">
+                        <td>Total Amount</td>
+                        <td class="text-right">₹{{grandTotal}}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px; font-size: 12px; color: #8b949e;">Date: {{currentDate}}</div>
+
+        <div class="footer">
+            <p>We are pleased to provide any further information you may require and look forward to assisting with your next order. Rest assured, it will receive our prompt and dedicated attention.</p>
+        </div>
+    </div>
+</body>
+</html>
