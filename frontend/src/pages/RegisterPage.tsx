@@ -8,6 +8,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
+import type { ResponseType } from "axios";
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/store/store';
 import { PlusCircle } from 'lucide-react';

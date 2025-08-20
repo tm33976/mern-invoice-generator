@@ -69,8 +69,8 @@ export default function AddProductPage() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema), // ✅ Resolver matches schema + form type
+  } = useForm<z.infer<typeof productSchema>>({
+    resolver: zodResolver(productSchema),
   });
 
   const pdfMutation = useMutation({
