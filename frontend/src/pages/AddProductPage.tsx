@@ -8,6 +8,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
+import type { ResponseType } from "axios";
+import type { AxiosRequestConfig } from "axios";
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
 import { PlusCircle } from 'lucide-react';
@@ -31,22 +33,30 @@ type ProductFormValues = z.infer<typeof productSchema>;
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // API function to generate the PDF
-const generateInvoicePdf = async ({ products, token, user }: { products: Product[], token: string, user: { name: string, email: string } }) => {
-  // Use the dynamic user data passed into the function
+const generateInvoicePdf = async ({
+  products,
+  token,
+  user
+}: {
+  products: Product[];
+  token: string;
+  user: { name: string; email: string };
+}) => {
   const payload = {
     personName: user.name,
     personEmail: user.email,
     products,
   };
 
-  const config = {
+  // Fix: responseType must be typed properly
+  const config: AxiosRequestConfig = {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    responseType: 'blob',
+    responseType: 'blob' as ResponseType,  // ✅ Fix TS error
   };
 
- const response = await axios.post(`${API_URL}/api/invoices/generate-pdf`, payload, config);
+  const response = await axios.post(`${API_URL}/api/invoices/generate-pdf`, payload, config);
   return response.data;
 };
 
@@ -60,7 +70,7 @@ export default function AddProductPage() {
     reset,
     formState: { errors },
   } = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(productSchema), // ✅ Resolver matches schema + form type
   });
 
   const pdfMutation = useMutation({
@@ -81,6 +91,7 @@ export default function AddProductPage() {
     }
   });
 
+  // ✅ SubmitHandler is correctly typed
   const handleAddProduct: SubmitHandler<ProductFormValues> = (data) => {
     setProducts([...products, data]);
     reset();
@@ -91,11 +102,9 @@ export default function AddProductPage() {
       alert("Please add at least one product to generate an invoice.");
       return;
     }
-    // Ensure userInfo exists before proceeding
     if (userInfo?.token) {
-      // Pass the user's info to the mutation
-      pdfMutation.mutate({ 
-        products, 
+      pdfMutation.mutate({
+        products,
         token: userInfo.token,
         user: { name: userInfo.name, email: userInfo.email }
       });
@@ -112,7 +121,9 @@ export default function AddProductPage() {
     <div className="space-y-8 max-w-5xl mx-auto text-white">
       <div>
         <h1 className="text-3xl font-bold">Add Products</h1>
-        <p className="text-gray-400 mt-2">This is basic login page which is used for levitation <br /> assignment purpose.</p>
+        <p className="text-gray-400 mt-2">
+          This is basic login page which is used for levitation <br /> assignment purpose.
+        </p>
       </div>
 
       <form onSubmit={handleSubmit(handleAddProduct)} className="space-y-4">
@@ -134,9 +145,9 @@ export default function AddProductPage() {
           </div>
         </div>
         <div className="flex justify-center pt-4">
-            <Button type="submit" variant="outline" className="bg-transparent border-gray-600 text-green-500 hover:bg-gray-800 hover:text-white rounded-md cursor-pointer">
+          <Button type="submit" variant="outline" className="bg-transparent border-gray-600 text-green-500 hover:bg-gray-800 hover:text-white rounded-md cursor-pointer">
             <PlusCircle className="mr-2 h-4 w-4" /> Add Product
-            </Button>
+          </Button>
         </div>
       </form>
 
@@ -169,14 +180,14 @@ export default function AddProductPage() {
             )}
           </TableBody>
           {products.length > 0 && (
-              <TableFooter>
+            <TableFooter>
               <TableRow className="border-gray-800 font-medium hover:bg-transparent">
-                  <TableCell colSpan={3} className="text-right">Sub-Total</TableCell>
-                  <TableCell className="text-right">INR {subTotal.toFixed(2)}</TableCell>
+                <TableCell colSpan={3} className="text-right">Sub-Total</TableCell>
+                <TableCell className="text-right">INR {subTotal.toFixed(2)}</TableCell>
               </TableRow>
               <TableRow className="border-gray-800 font-medium hover:bg-transparent">
-                  <TableCell colSpan={3} className="text-right">Incl + GST 18%</TableCell>
-                  <TableCell className="text-right">INR {(subTotal + gst).toFixed(2)}</TableCell>
+                <TableCell colSpan={3} className="text-right">Incl + GST 18%</TableCell>
+                <TableCell className="text-right">INR {(subTotal + gst).toFixed(2)}</TableCell>
               </TableRow>
             </TableFooter>
           )}

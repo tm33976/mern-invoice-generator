@@ -40,12 +40,12 @@ const generateInvoicePdf = async ({ products, token, user }: { products: Product
     products,
   };
 
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    responseType: 'blob',
-  };
+  const config: AxiosRequestConfig = {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+  responseType: "blob", // ✅ now TS is happy
+};
   
   // UPDATE THIS LINE
   const response = await axios.post(`${API_URL}/api/invoices/generate-pdf`, payload, config);
@@ -78,7 +78,7 @@ export default function AddProductPage() {
     reset,
     formState: { errors },
   } = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
+     resolver: zodResolver(productSchema) as any, 
   });
 
   const pdfMutation = useMutation({
