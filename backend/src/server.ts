@@ -15,8 +15,13 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // --- Middleware ---
-// Enable Cross-Origin Resource Sharing for our frontend
-app.use(cors());
+
+// FIX: Configure CORS for Production
+const frontendURL = process.env.FRONTEND_URL || 'http://localhost:5173';
+app.use(cors({
+  origin: frontendURL
+}));
+
 // Parse incoming JSON requests and put the parsed data in req.body
 app.use(express.json());
 
