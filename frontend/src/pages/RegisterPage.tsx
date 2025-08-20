@@ -1,234 +1,119 @@
-import { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { useForm } from "react-hook-form";
-import type { SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import axios, { type AxiosRequestConfig } from "axios";
+import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
 
-import { useSelector, useDispatch } from 'react-redux';
-import type { RootState } from '@/store/store';
-import { PlusCircle } from 'lucide-react';
-import { logout } from '@/store/authSlice';
-import { useNavigate } from 'react-router-dom';
-
-// Define the type for a single product
-interface Product {
-  name: string;
-  quantity: number;
-  rate: number;
-}
-
-// Define the validation schema for the product form
-const productSchema = z.object({
-  name: z.string().min(1, "Product name is required"),
-  quantity: z.coerce.number().min(1, "Quantity must be at least 1"),
-  rate: z.coerce.number().min(0.01, "Price must be greater than 0"),
-});
-
-type ProductFormValues = z.infer<typeof productSchema>;
-
+// This makes the component deployment-ready
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-// API function to generate the PDF
-const generateInvoicePdf = async ({ products, token, user }: { products: Product[], token: string, user: { name: string, email: string } }) => {
-  const payload = {
-    personName: user.name,
-    personEmail: user.email,
-    products,
-  };
+// Define the validation schema using Zod
+const registerSchema = z.object({
+  name: z.string().min(1, { message: "Name is required" }),
+  email: z.string().email({ message: "Invalid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+});
 
-  const config: AxiosRequestConfig = {
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-  responseType: "blob", // ✅ now TS is happy
-};
-  
-  // UPDATE THIS LINE
-  const response = await axios.post(`${API_URL}/api/invoices/generate-pdf`, payload, config);
+// Infer the TypeScript type from the schema
+type RegisterFormValues = z.infer<typeof registerSchema>;
+
+// API function to register the user
+const registerUser = async (data: RegisterFormValues) => {
+  const response = await axios.post(`${API_URL}/api/auth/register`, data);
   return response.data;
 };
 
-const Logo = () => (
-    <div className="flex items-center gap-2">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M2 17L12 22L22 17" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M2 12L12 17L22 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-      <div>
-        <p className="font-bold text-white">levitation</p>
-        <p className="text-xs text-gray-400">infotech</p>
-      </div>
-    </div>
-  );
-
-export default function AddProductPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const { userInfo } = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
+export default function RegisterPage() {
   const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors },
-  } = useForm<ProductFormValues>({
-     resolver: zodResolver(productSchema) as any, 
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
   });
 
-  const pdfMutation = useMutation({
-    mutationFn: generateInvoicePdf,
-    onSuccess: (data: Blob) => {
-      const url = window.URL.createObjectURL(new Blob([data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'invoice.pdf');
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode?.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      setProducts([]);
+  const mutation = useMutation({
+    mutationFn: registerUser,
+    onSuccess: () => {
+      alert("Registration successful! Please log in.");
+      navigate("/login"); // Navigate to the login page
     },
     onError: (error: any) => {
-      alert(error.response?.data?.message || "Failed to generate PDF. Please try again.");
+      alert(error.response?.data?.message || "An error occurred during registration");
     }
   });
 
-  const handleAddProduct: SubmitHandler<ProductFormValues> = (data) => {
-    setProducts([...products, data]);
-    reset();
+  const onSubmit = (data: RegisterFormValues) => {
+    mutation.mutate(data);
   };
-
-  const handleGeneratePdf = () => {
-    if (products.length === 0) {
-      alert("Please add at least one product to generate an invoice.");
-      return;
-    }
-    if (userInfo) {
-      pdfMutation.mutate({ 
-        products, 
-        token: userInfo.token,
-        user: { name: userInfo.name, email: userInfo.email }
-      });
-    }
-  };
-  
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
-  };
-
-  const { subTotal, gst } = useMemo(() => {
-    const subTotal = products.reduce((acc, p) => acc + p.quantity * p.rate, 0);
-    const gst = subTotal * 0.18;
-    return { subTotal, gst };
-  }, [products]);
 
   return (
-    <div className="min-h-screen bg-[#0d1117] text-white">
-        <header className="bg-[#161b22] border-b border-gray-800">
-            <div className="container mx-auto flex justify-between items-center px-4 py-3">
-            <Logo />
-            <Button 
-                onClick={handleLogout}
-                className="bg-green-500 text-white hover:bg-green-600 h-8 px-4 rounded-md"
-            >
-                Logout
-            </Button>
-            </div>
-        </header>
-        <main className="container mx-auto p-4 md:p-8">
-            <div className="space-y-8 max-w-5xl mx-auto">
-            <div>
-                <h1 className="text-3xl font-bold">Add Products</h1>
-                <p className="text-gray-400 mt-2">This is a basic page which is used for levitation assignment purpose.</p>
-            </div>
-
-            <form onSubmit={handleSubmit(handleAddProduct)} className="space-y-4">
-                <div className="grid md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">Product Name</label>
-                    <Input placeholder="Enter the product name" {...register("name")} className="bg-[#161b22] border-gray-700 h-10"/>
-                    {errors.name && <p className="text-red-500 text-xs">{errors.name.message}</p>}
-                </div>
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">Product Price</label>
-                    <Input type="number" step="0.01" placeholder="Enter the price" {...register("rate")} className="bg-[#161b22] border-gray-700 h-10"/>
-                    {errors.rate && <p className="text-red-500 text-xs">{errors.rate.message}</p>}
-                </div>
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">Quantity</label>
-                    <Input type="number" placeholder="Enter the Qty" {...register("quantity")} className="bg-[#161b22] border-gray-700 h-10"/>
-                    {errors.quantity && <p className="text-red-500 text-xs">{errors.quantity.message}</p>}
-                </div>
-                </div>
-                <div className="flex justify-center pt-4">
-                    <Button type="submit" variant="outline" className="bg-transparent border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white rounded-md">
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Product
-                    </Button>
-                </div>
-            </form>
-
-            <div className="border border-gray-800 rounded-lg overflow-hidden">
-                <Table>
-                <TableHeader>
-                    <TableRow className="bg-gray-200 hover:bg-gray-200">
-                    <TableHead className="text-black font-semibold">Product name</TableHead>
-                    <TableHead className="text-black font-semibold">Price</TableHead>
-                    <TableHead className="text-black font-semibold">Quantity</TableHead>
-                    <TableHead className="text-right text-black font-semibold">Total Price</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {products.length > 0 ? (
-                    products.map((product, index) => (
-                        <TableRow key={index} className="border-gray-800">
-                        <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>INR {product.rate.toFixed(2)}</TableCell>
-                        <TableCell>{product.quantity}</TableCell>
-                        <TableCell className="text-right">INR {(product.rate * product.quantity).toFixed(2)}</TableCell>
-                        </TableRow>
-                    ))
-                    ) : (
-                    <TableRow>
-                        <TableCell colSpan={4} className="text-center text-gray-500 py-12">
-                        No products added yet.
-                        </TableCell>
-                    </TableRow>
-                    )}
-                </TableBody>
-                {products.length > 0 && (
-                    <TableFooter>
-                    <TableRow className="border-gray-800 font-medium hover:bg-transparent">
-                        <TableCell colSpan={3} className="text-right">Sub-Total</TableCell>
-                        <TableCell className="text-right">INR {subTotal.toFixed(2)}</TableCell>
-                    </TableRow>
-                    <TableRow className="border-gray-800 font-medium hover:bg-transparent">
-                        <TableCell colSpan={3} className="text-right">Incl + GST 18%</TableCell>
-                        <TableCell className="text-right">INR {(subTotal + gst).toFixed(2)}</TableCell>
-                    </TableRow>
-                    </TableFooter>
-                )}
-                </Table>
-            </div>
-
-            <div className="flex justify-center pt-4">
+    <div className="w-full max-w-6xl mx-auto">
+        <main className="grid md:grid-cols-2 gap-16 items-center">
+          <div className="flex flex-col justify-center">
+             <h1 className="text-3xl font-bold mb-2">Sign up to begin journey</h1>
+            <p className="text-gray-400 mb-8">
+              This is a basic signup page which is used for levitation assignment purpose.
+            </p>
+            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+              <div>
+                <label className="text-sm font-medium text-gray-300">Enter your name</label>
+                <Input 
+                  type="text" 
+                  placeholder="Enter Name" 
+                  className="mt-2 bg-[#161b22] border-gray-700 h-10 text-white placeholder:text-gray-500"
+                  {...register("name")}
+                />
+                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
+              </div>
+               <div>
+                <label className="text-sm font-medium text-gray-300">Email Address</label>
+                <Input 
+                  type="email" 
+                  placeholder="Enter Email ID" 
+                  className="mt-2 bg-[#161b22] border-gray-700 h-10 text-white placeholder:text-gray-500"
+                  {...register("email")}
+                />
+                 {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-300">Password</label>
+                <Input 
+                  type="password" 
+                  placeholder="Enter the Password" 
+                  className="mt-2 bg-[#161b22] border-gray-700 h-10 text-white placeholder:text-gray-500"
+                  {...register("password")}
+                />
+                 {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+              </div>
+              <div className="flex items-center justify-between pt-2">
                 <Button 
-                onClick={handleGeneratePdf} 
-                disabled={products.length === 0 || pdfMutation.isPending}
-                className="bg-gray-600 text-white hover:bg-gray-700 w-full md:w-auto rounded-md"
+                  className="bg-gray-300 text-black hover:bg-white rounded-md"
+                  type="submit"
+                  disabled={mutation.isPending}
                 >
-                {pdfMutation.isPending ? "Generating..." : "Generate PDF Invoice"}
+                  {mutation.isPending ? "Registering..." : "Register"}
                 </Button>
-            </div>
-            </div>
+                <Link to="/login" className="text-sm text-gray-400 hover:underline">
+                  Already have account?
+                </Link>
+              </div>
+            </form>
+          </div>
+          <div className="hidden md:block">
+            <img 
+              src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1973&auto=format&fit=crop" 
+              alt="Modern building exterior" 
+              className="w-full h-full object-cover rounded-lg"
+              onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x400/111827/FFFFFF?text=Image'; }}
+            />
+          </div>
         </main>
-    </div>
+      </div>
   );
 }
