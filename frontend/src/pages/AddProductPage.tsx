@@ -66,7 +66,7 @@ export default function AddProductPage() {
     reset,
     formState: { errors },
   } = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(productSchema) as any,
   });
 
   const pdfMutation = useMutation({
