@@ -16,11 +16,19 @@ const PORT = process.env.PORT || 5000;
 
 // --- Middleware ---
 
-// FIX: Configure CORS for Production
+// FIX: Configure CORS for Production with Preflight Handling
 const frontendURL = process.env.FRONTEND_URL || 'http://localhost:5173';
-app.use(cors({
+
+const corsOptions = {
   origin: frontendURL
-}));
+};
+
+// This is the crucial part for Vercel
+// It handles the preflight OPTIONS request that the browser sends first
+app.options('*', cors(corsOptions)); 
+
+// Now, use CORS for all other requests
+app.use(cors(corsOptions));
 
 // Parse incoming JSON requests and put the parsed data in req.body
 app.use(express.json());
