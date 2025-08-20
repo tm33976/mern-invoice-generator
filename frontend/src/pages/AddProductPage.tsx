@@ -2,14 +2,11 @@ import { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
-import { useForm } from "react-hook-form";
-import type { SubmitHandler } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
-import type { ResponseType } from "axios";
-import type { AxiosRequestConfig } from "axios";
+import axios, { type AxiosRequestConfig } from "axios";
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
 import { PlusCircle } from 'lucide-react';
@@ -21,7 +18,7 @@ interface Product {
   rate: number;
 }
 
-// Define the validation schema for the product form
+// Validation schema
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required"),
   quantity: z.coerce.number().min(1, "Quantity must be at least 1"),
@@ -48,12 +45,11 @@ const generateInvoicePdf = async ({
     products,
   };
 
-  // Fix: responseType must be typed properly
   const config: AxiosRequestConfig = {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    responseType: 'blob' as ResponseType,  // ✅ Fix TS error
+    responseType: 'blob' as const, // ✅ fixed typing
   };
 
   const response = await axios.post(`${API_URL}/api/invoices/generate-pdf`, payload, config);
@@ -69,8 +65,8 @@ export default function AddProductPage() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<z.input<typeof productSchema>>({
-    resolver: zodResolver(productSchema), // ✅ Resolver matches schema + form type
+  } = useForm<ProductFormValues>({
+    resolver: zodResolver(productSchema),
   });
 
   const pdfMutation = useMutation({
@@ -91,7 +87,6 @@ export default function AddProductPage() {
     }
   });
 
-  // ✅ SubmitHandler is correctly typed
   const handleAddProduct: SubmitHandler<ProductFormValues> = (data) => {
     setProducts([...products, data]);
     reset();
@@ -122,11 +117,11 @@ export default function AddProductPage() {
       <div>
         <h1 className="text-3xl font-bold">Add Products</h1>
         <p className="text-gray-400 mt-2">
-          This is basic login page which is used for levitation <br /> assignment purpose.
+          This is a basic product entry page used for invoice generation.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit<ProductFormValues>(handleAddProduct)} className="space-y-4">
+      <form onSubmit={handleSubmit(handleAddProduct)} className="space-y-4">
         <div className="grid md:grid-cols-3 gap-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">Product Name</label>
