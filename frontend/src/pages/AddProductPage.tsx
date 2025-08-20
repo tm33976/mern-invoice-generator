@@ -69,7 +69,7 @@ export default function AddProductPage() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<z.input<typeof productSchema>>({
+  } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema), // ✅ Resolver matches schema + form type
   });
 
@@ -126,7 +126,7 @@ export default function AddProductPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(handleAddProduct)} className="space-y-4">
+      <form onSubmit={handleSubmit<ProductFormValues>(handleAddProduct)} className="space-y-4">
         <div className="grid md:grid-cols-3 gap-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">Product Name</label>
