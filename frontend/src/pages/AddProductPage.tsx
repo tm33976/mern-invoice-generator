@@ -69,7 +69,7 @@ export default function AddProductPage() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<ProductFormValues>({
+  } = useForm<z.input<typeof productSchema>>({
     resolver: zodResolver(productSchema), // ✅ Resolver matches schema + form type
   });
 
