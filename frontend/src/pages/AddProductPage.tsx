@@ -28,6 +28,8 @@ const productSchema = z.object({
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 // API function to generate the PDF
 const generateInvoicePdf = async ({ products, token, user }: { products: Product[], token: string, user: { name: string, email: string } }) => {
   // Use the dynamic user data passed into the function
@@ -44,7 +46,7 @@ const generateInvoicePdf = async ({ products, token, user }: { products: Product
     responseType: 'blob',
   };
 
-  const response = await axios.post("http://localhost:5000/api/invoices/generate-pdf", payload, config);
+ const response = await axios.post(`${API_URL}/api/invoices/generate-pdf`, payload, config);
   return response.data;
 };
 
@@ -141,7 +143,7 @@ export default function AddProductPage() {
       <div className="border border-gray-800 rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-200 cursor-pointer">
+            <TableRow className="bg-gray-200 hover:bg-gray-200">
               <TableHead className="text-black font-semibold">Product name</TableHead>
               <TableHead className="text-black font-semibold">Price</TableHead>
               <TableHead className="text-black font-semibold">Quantity</TableHead>

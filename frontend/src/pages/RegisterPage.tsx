@@ -46,7 +46,8 @@ const generateInvoicePdf = async ({ products, token, user }: { products: Product
     },
     responseType: 'blob',
   };
-
+  
+  // UPDATE THIS LINE
   const response = await axios.post(`${API_URL}/api/invoices/generate-pdf`, payload, config);
   return response.data;
 };
